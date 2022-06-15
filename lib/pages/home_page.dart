@@ -37,6 +37,7 @@ class _HomeScreenState extends State<HomeScreen> {
           actions: [
             Container(
                 margin: EdgeInsets.only(right: 10),
+                //TODO:hacemos un if para ver la conexion en base al status
                 child: scoketProvi.serverStatusG == ServerStatus.Online
                     ? Icon(
                         Icons.check_circle,

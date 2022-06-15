@@ -40,14 +40,5 @@ class SocketService with ChangeNotifier {
       notifyListeners();
       print('disconnect');
     });
-
-    // this._socket.on('nuevo-mensaje', (payload) {
-    //   print('nuevo mensaje !!!!');
-    //   print('nombre:' + payload['nombre']);
-    //   print('mensaje:' + payload['mensaje']);
-    //   print(payload.containsKey('mensaje2')
-    //       ? payload['mensaje2']
-    //       : 'no xite el argumento llamado');
-    // });
   }
 }
