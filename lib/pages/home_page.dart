@@ -3,6 +3,9 @@ import 'dart:io';
 import 'package:app_con_sockets/models/banda.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import '../services/socket_service.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -20,6 +23,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final scoketProvi = Provider.of<SocketService>(context);
+    //print(scoketProvi.serverStatusG);
     return Scaffold(
         appBar: AppBar(
           elevation: 1,
@@ -29,6 +34,19 @@ class _HomeScreenState extends State<HomeScreen> {
               style: TextStyle(color: Colors.black87),
             ),
           ),
+          actions: [
+            Container(
+                margin: EdgeInsets.only(right: 10),
+                child: scoketProvi.serverStatusG == ServerStatus.Online
+                    ? Icon(
+                        Icons.check_circle,
+                        color: Colors.blue[300],
+                      )
+                    : Icon(
+                        Icons.offline_bolt,
+                        color: Colors.redAccent,
+                      )),
+          ],
           backgroundColor: Colors.white,
         ),
         body: ListView.builder(
