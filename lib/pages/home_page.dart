@@ -1,5 +1,5 @@
 import 'dart:io';
-
+import 'package:pie_chart/pie_chart.dart';
 import 'package:app_con_sockets/models/banda.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -14,12 +14,24 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   List<Banda> LBanda = [
-    Banda(id: '1', name: 'Metalica', votes: 5),
-    Banda(id: '2', name: 'LINKINPARK', votes: 5),
-    Banda(id: '3', name: 'ROCK', votes: 5),
-    Banda(id: '4', name: 'ACDC', votes: 5),
-    Banda(id: '5', name: 'TWENTYONEPILOTS', votes: 5)
+    // Banda(id: '1', name: 'Metalica', votes: 5),
+    // Banda(id: '2', name: 'LINKINPARK', votes: 5),
+    // Banda(id: '3', name: 'ROCK', votes: 5),
+    // Banda(id: '4', name: 'ACDC', votes: 5),
+    // Banda(id: '5', name: 'TWENTYONEPILOTS', votes: 5)
   ];
+
+  @override
+  void initState() {
+    final scoketProvi = Provider.of<SocketService>(context, listen: false);
+    scoketProvi.socketG.on('bandas-registradas', (payload) {
+      this.LBanda =
+          (payload as List).map((banaobj) => Banda.fromMap(banaobj)).toList();
+      //print(payload);
+      setState(() {});
+    });
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -50,11 +62,19 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
           backgroundColor: Colors.white,
         ),
-        body: ListView.builder(
-          itemCount: LBanda.length,
-          itemBuilder: (BuildContext context, int index) {
-            return bandaTile(LBanda[index]);
-          },
+        body: Column(
+          children: [
+            //solo si las bandas esta con datos se dibuja el widget
+            if (LBanda.isNotEmpty) _graficadebandas(),
+            Expanded(
+              child: ListView.builder(
+                itemCount: LBanda.length,
+                itemBuilder: (BuildContext context, int index) {
+                  return bandaTile(LBanda[index]);
+                },
+              ),
+            ),
+          ],
         ),
         floatingActionButton: FloatingActionButton(
           onPressed: addNewBand,
@@ -64,11 +84,13 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget bandaTile(Banda objbanda) {
+    final socketSerObj = Provider.of<SocketService>(context, listen: false);
     return Dismissible(
       key: Key(objbanda.id),
       direction: DismissDirection.startToEnd,
-      onDismissed: (direction) {
-        print(direction);
+      onDismissed: (_) {
+        print(objbanda.id);
+        socketSerObj.socketG.emit('eliminar-banda', {'id': objbanda.id});
       },
       background: Container(
         padding: const EdgeInsets.only(left: 8.0),
@@ -94,7 +116,9 @@ class _HomeScreenState extends State<HomeScreen> {
               fontWeight: FontWeight.bold,
               fontSize: 18),
         ),
-        onTap: () => print(objbanda.name),
+        onTap: () {
+          socketSerObj.socketG.emit('votar-banda', {'id': objbanda.id});
+        },
       ),
     );
   }
@@ -150,14 +174,34 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void addBandList(String name) {
+    final socketSerObj = Provider.of<SocketService>(context, listen: false);
     print(name);
     if (name.length > 1) {
       //podmeos agregar
-      this
-          .LBanda
-          .add(new Banda(id: DateTime.now().toString(), name: name, votes: 1));
-      setState(() {});
+      socketSerObj.socketG.emit('nueva-banda', {'name': name});
     }
     Navigator.pop(context);
+  }
+
+  Widget _graficadebandas() {
+    Map<String, double> dataMap = new Map();
+    LBanda.forEach((banda) {
+      dataMap.putIfAbsent(banda.name, () => banda.votes.toDouble());
+    });
+
+    return Container(
+      margin: const EdgeInsets.only(left: 10, top: 5),
+      child: PieChart(
+        legendOptions: const LegendOptions(
+          showLegendsInRow: false,
+          legendPosition: LegendPosition.left,
+          showLegends: true,
+          legendTextStyle: TextStyle(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        dataMap: dataMap,
+      ),
+    );
   }
 }
